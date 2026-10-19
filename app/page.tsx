@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { experience, links, more, pipeline, posts, projects, record, stack, stats, study } from "./data";
+import { experience, links, more, pipeline, posts, projects, record, relayPipeline, stack, stats, study } from "./data";
 import { Icon } from "./icons";
 import type { NavItem } from "./nav";
 import { Head, Hexagon, Shell, Stats } from "./ui";
@@ -19,6 +19,37 @@ const nav: NavItem[] = [
 const tileCuts = ["cut-bl", "cut-tr", "cut-br", "cut-tl"];
 // Pipeline cards alternate corners, as in the reference's "How every event was decided" row.
 const stepCuts = ["cut-bl", "cut-tr"];
+
+// A project's inner workings as numbered cards, one per step.
+function Pipeline({ title, tag, steps }: { title: string; tag: string; steps: typeof pipeline }) {
+  return (
+    <>
+      <div className="subhead">
+        <h3>{title}</h3>
+        <span>{tag}</span>
+      </div>
+      <ol className="pipeline">
+        {steps.map((s, i) => (
+          <li key={s.step} className={`chamfer ${stepCuts[i % stepCuts.length]}`}>
+            <div className="in step">
+              <span className="icon-box">
+                <Icon name={s.icon} />
+              </span>
+              <p className="step-name">{s.name}</p>
+              <p className="step-num">
+                <span className="sr-only">Step </span>
+                {s.step}
+              </p>
+              <p className="step-note">
+                {s.note} <span>({s.tech})</span>
+              </p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </>
+  );
+}
 
 export default function Home() {
   return (
@@ -156,29 +187,8 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="subhead">
-          <h3>How ZaiGuard decides on every event</h3>
-          <span>Alert engine, in order</span>
-        </div>
-        <ol className="pipeline">
-          {pipeline.map((s, i) => (
-            <li key={s.step} className={`chamfer ${stepCuts[i % stepCuts.length]}`}>
-              <div className="in step">
-                <span className="icon-box">
-                  <Icon name={s.icon} />
-                </span>
-                <p className="step-name">{s.name}</p>
-                <p className="step-num">
-                  <span className="sr-only">Layer </span>
-                  {s.step}
-                </p>
-                <p className="step-note">
-                  {s.note} <span>({s.tech})</span>
-                </p>
-              </div>
-            </li>
-          ))}
-        </ol>
+        <Pipeline title="How ZaiGuard decides on every event" tag="Alert engine, in order" steps={pipeline} />
+        <Pipeline title="How Relay handles every tool call" tag="Gateway, in order" steps={relayPipeline} />
 
         <div className="subhead">
           <h3>More on GitHub</h3>

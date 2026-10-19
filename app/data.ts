@@ -140,6 +140,16 @@ export const pipeline: { step: string; name: string; tech: string; note: string;
   { step: "5", name: "Priority tiering", tech: "Outbox worker", note: "Grades what survives as critical, high or medium, then publishes it.", icon: "shield" },
 ];
 
+// Relay's gateway, in the order every tool call passes through it (gateway/app/tools.py in the repo).
+export const relayPipeline: typeof pipeline = [
+  { step: "1", name: "Key check", tech: "SHA-256", note: "Resolves the API key to a user and their stores; unknown or revoked keys stop here.", icon: "shield" },
+  { step: "2", name: "Rate limit", tech: "Redis", note: "A token bucket per user: a burst of 120 calls, then 2 more each second.", icon: "gauge" },
+  { step: "3", name: "Audit gate", tech: "Audit log", note: "No call runs while the audit log can't record it.", icon: "filter" },
+  { step: "4", name: "Routing", tech: "Server prefix", note: "The prefix picks the server; another store's server answers as an unknown tool.", icon: "network" },
+  { step: "5", name: "Upstream call", tech: "AES-256-GCM", note: "Adds the server's decrypted credential, never shown to the caller, and gives up after 30 s.", icon: "pulse" },
+  { step: "6", name: "Audit record", tech: "Hash chain", note: "Who, which server and tool, how long and the outcome, chained so an edit shows.", icon: "book" },
+];
+
 export const more: { name: string; stack: string; note: string; repo: string; icon: IconName }[] = [
   {
     name: "CivicSentinel",
