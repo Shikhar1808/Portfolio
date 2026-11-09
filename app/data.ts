@@ -382,21 +382,21 @@ export const stack: { group: string; items: string[] }[] = [
     group: "Backend & DevOps",
     items: [
       "Go", "Gin", "GORM", "FastAPI", "Microservices", "REST APIs", "RBAC", "PostgreSQL", "MySQL", "Redis",
-      "Docker", "Kubernetes", "Helm", "Linux", "GitHub Actions", "NGINX", "Prometheus", "Grafana", "Loki", "AWS",
+      "Docker", "Kubernetes", "Helm", "Linux", "GitHub Actions", "NGINX", "Prometheus", "Grafana", "AWS",
     ],
   },
   {
     group: "AI & GPU",
     items: [
       "PyTorch", "CUDA", "AMD ROCm/HIP", "Nsight", "vLLM", "SGLang", "TensorRT-LLM", "ONNX Runtime", "YOLO",
-      "ByteTrack", "OpenCV", "LangChain", "LangGraph", "MCP", "FAISS", "Qdrant", "Flower", "Jetson",
+      "OpenCV", "LangChain", "LangGraph", "MCP", "Qdrant", "Flower", "Jetson",
     ],
   },
   {
     group: "Web (MERN)",
     items: [
-      "MongoDB", "Mongoose", "Express", "React", "Node.js", "Next.js", "Tailwind CSS", "TanStack Query",
-      "React Hook Form", "Zod", "Socket.io", "JWT", "Discord.js", "Hardhat", "OpenZeppelin",
+      "MongoDB", "Mongoose", "Express", "React", "Node.js", "Tailwind CSS",
+      "Zod", "Socket.io", "JWT", "Discord.js", "Hardhat",
     ],
   },
 ];
