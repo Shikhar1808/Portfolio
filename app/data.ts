@@ -115,6 +115,22 @@ export const projects: {
     repo: "github.com/Shikhar1808/Relay",
   },
   {
+    slug: "rottom-mail",
+    name: "Rottom Mail",
+    kind: "Email campaign scheduler",
+    icon: "message",
+    metric: "0 repeats",
+    metricNote: "each email sent once, even after a crash",
+    stack: "TypeScript, Express, React, PostgreSQL, Prisma, Redis, BullMQ, Elasticsearch, AWS",
+    points: [
+      "Every email is a Postgres row plus a BullMQ delayed job, with no cron. Redis AOF and a startup repair from Postgres mean restarts lose nothing.",
+      "An atomic claim and a fixed Message-ID check of the mailbox stop double sends, even with workers racing or crashing mid-send.",
+      "Hourly limits per sender or global, enforced by a Redis Lua script; overflow moves to the next window in order, never dropped, with a Slack alert.",
+    ],
+    repo: "github.com/Shikhar1808/rottom-mail",
+    live: "https://rottom.outbox.shikharsaxena.space",
+  },
+  {
     slug: "zenith",
     name: "Zenith",
     kind: "Competition platform",
@@ -600,6 +616,74 @@ export const projectPages: Record<string, ProjectPage> = {
       "Wrote three MCP servers (WooCommerce with seven tools, order risk, fulfilment) and a LangGraph chat agent that acts as the signed-in user and confirms before any write.",
       "Secured it end to end: hashed API keys, AES-256-GCM upstream credentials, HttpOnly cookie sessions, Redis rate limits and a tamper-evident audit log.",
       "Packaged it as two Helm charts with probes, resource limits, Secrets and NetworkPolicies, and covered it with 464 automated tests and two end-to-end suites.",
+    ],
+  },
+  "rottom-mail": {
+    team: "Solo project",
+    title: "Rottom Mail",
+    sub: "Schedule cold-email campaigns that go out on time, exactly once, and within safe sending limits.",
+    problem:
+      "A cold email sent twice is worse than one never sent. Rottom Mail schedules thousands of emails across several mailboxes, keeps every hourly limit even with many workers, and survives restarts and crashes without losing or repeating a single send.",
+    highlights: [
+      { label: "Duplicate sends", value: "0", note: "atomic claim plus a mailbox check after a crash." },
+      { label: "Hourly cap", value: "200", note: "per sender, overflow delayed in order, never dropped." },
+      { label: "Min gap", value: "2 s", note: "between sends from one mailbox." },
+      { label: "Automated tests", value: "43", note: "37 backend, 6 frontend." },
+    ],
+    flowTitle: "The life of one email.",
+    flow: [
+      {
+        title: "Schedule",
+        text: "POST /api/campaigns validates the form with zod, saves one row per lead in a single transaction, then adds one BullMQ delayed job per row, with the email id as the job id.",
+      },
+      {
+        title: "Wait",
+        text: "The job sleeps in Redis (AOF, noeviction) until its send time. On startup the API re-adds any job Redis lost, from Postgres, and overdue emails go out right away.",
+      },
+      {
+        title: "Rate limit",
+        text: "A worker asks a Redis Lua limiter for a slot. If the hour is full, the email moves to the next window, keeping its place in line, and Slack gets one alert.",
+      },
+      {
+        title: "Claim and send",
+        text: "The worker claims the row in one atomic update (scheduled → sending), so two workers can't both send it, then sends through the sender's Ethereal mailbox with a fixed Message-ID.",
+      },
+      {
+        title: "Record",
+        text: "The row becomes sent with the SMTP reply, an append-only audit event is written in the same transaction, and a sync job copies the change to Elasticsearch for search.",
+      },
+    ],
+    stack: [
+      {
+        group: "Backend",
+        items: [
+          ["Express, TypeScript", "The API, with Google login (PKCE) and Redis sessions"],
+          ["PostgreSQL, Prisma", "Source of truth, with a trigger keeping the audit log append-only"],
+          ["Redis, BullMQ", "Delayed jobs, the rate limiter and workers that scale out"],
+          ["Elasticsearch", "Search across recipients, subjects and messages"],
+        ],
+      },
+      {
+        group: "Frontend",
+        items: [
+          ["React, Vite", "Gmail-style dashboard with Scheduled and Sent tabs"],
+          ["Bull Board", "Live queue dashboard for admins"],
+        ],
+      },
+      {
+        group: "Delivery and ops",
+        items: [
+          ["Ethereal SMTP + IMAP", "Fake mailboxes for sending and the mailbox check"],
+          ["Slack OAuth", "Alerts when a sending limit is reached"],
+          ["AWS EC2, Docker Compose, Caddy", "Production with automatic HTTPS"],
+        ],
+      },
+    ],
+    mine: [
+      "Built a full-stack email scheduler on BullMQ delayed jobs with no cron, surviving restarts through Redis AOF and a startup repair from Postgres.",
+      "Guaranteed no double sends with a job id per email, an atomic database claim and a Message-ID mailbox check after crashes.",
+      "Enforced per-sender and global hourly limits across many workers with a Redis Lua script, delaying overflow in order instead of dropping it.",
+      "Deployed it on AWS EC2 with Docker Compose and Caddy, behind Google login, encrypted secrets and an append-only audit trail.",
     ],
   },
   zenith: {
