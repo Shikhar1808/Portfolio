@@ -53,7 +53,7 @@ export const experience: {
       ["Runtimes", "vLLM, SGLang, TensorRT-LLM"],
       ["Platforms", "CUDA, ROCm/HIP"],
     ],
-    link: { href: "/study", label: "Read the internship study" },
+    link: { href: "/studies/voxomos-internship", label: "Read the internship study" },
   },
   {
     company: "TruckHai",
@@ -246,6 +246,45 @@ export const more: { name: string; stack: string; note: string; repo: string; ic
   },
 ];
 
+// Study cards on the home page and /studies, newest first. To add a study: add an entry here and a page at
+// app/studies/<slug>/page.tsx (copy an existing one).
+export const studies: {
+  slug: string;
+  kind: string;
+  dates: string;
+  icon: IconName;
+  metric: string;
+  metricNote: string;
+  title: string;
+  summary: string;
+  tags: string;
+}[] = [
+  {
+    slug: "rl-speculative-decoding",
+    kind: "Course study",
+    dates: "Nov 2026",
+    icon: "sparkles",
+    metric: "1.75×",
+    metricNote: "faster generation, same output",
+    title: "Learning when to stop drafting",
+    summary:
+      "Four RL agents decide, token by token, when a draft model should stop guessing and let the target check. All four beat every fixed rule, live on a 6 GB GPU.",
+    tags: "PyTorch, CUDA graphs, Value Iteration, Q-learning, DQN, REINFORCE",
+  },
+  {
+    slug: "voxomos-internship",
+    kind: "Internship study",
+    dates: "Jun – Jul 2026",
+    icon: "cpu",
+    metric: "13.7 ms",
+    metricNote: "per token: the GPU sets the floor, not the engine",
+    title: "Same GPU, three engines",
+    summary:
+      "One small model served on vLLM, SGLang and TensorRT-LLM to find what limits LLM serving, then the CUDA and HIP kernels behind vector search.",
+    tags: "vLLM, SGLang, TensorRT-LLM, CUDA, HIP, Nsight",
+  },
+];
+
 // Voxomos internship study. LLM numbers: TinyLlama-1.1B-Chat on one RTX 3050 6 GB (bf16, single GPU).
 export const study = {
   llmFindings: [
@@ -369,6 +408,150 @@ export const study = {
     "FlashAttention v1–v3", "FlashInfer", "PagedAttention and KV-cache sizing", "Continuous batching", "Chunked prefill",
     "Speculative decoding (EAGLE-3)", "Prompt caching", "Model routing", "LLM observability", "Serverless cold starts",
     "Cache-aware routing", "DeepSeek-V3 MoE and DualPipe", "NCCL and RCCL", "ROCm", "SYCL and oneAPI", "Roofline model",
+  ],
+};
+
+// RL speculative decoding course study. Numbers from the repo's docs/06_results.md and results/*.csv (RTX 3050 6 GB).
+export const rlStudy = {
+  repo: "https://github.com/Shikhar1808/rl-speculative-decoding",
+  findings: [
+    { label: "Live speedup", value: "1.75×", note: "SmolLM2 with the Value Iteration policy: 68.4 tok/s against 39.2 for the target alone." },
+    { label: "Over the best baseline", value: "+6%", note: "live, on both model pairs, against HuggingFace's confidence-threshold rule." },
+    { label: "CUDA graphs", value: "1.44 → 0.25", note: "draft cost relative to the target. Without graphs, speculation could not win at all." },
+    { label: "Simulator ranking", value: "1.00", note: "rank correlation with the live run on Qwen (0.94 on SmolLM2), at 8–14% optimistic." },
+  ],
+  setup: [
+    ["GPU", "RTX 3050 Laptop, 6 GB, CUDA graphs"],
+    ["Model pairs", "Qwen2.5 0.5B → 1.5B, SmolLM2 135M → 1.7B"],
+    ["Prompts", "498 chat, code and maths prompts: 399 to train, 99 to test"],
+    ["Decoding", "Greedy, answers up to 128 tokens, up to 8 drafts per round"],
+    ["Team", "Course project at Thapar Institute, with Vaibhav Sundriyal and Angad Shukla"],
+  ] as Row[],
+  mdp: [
+    ["State", "Tokens drafted s, latest draft confidence p, entropy H, chance all drafts survive q, recent acceptance rate a"],
+    ["Actions", "CONTINUE (draft one more) or STOP (verify). STOP is forced at 8 drafts"],
+    ["Reward", "On STOP: tokens gained − λ(1 + s·c). Zero on CONTINUE"],
+    ["c", "Cost of one draft step relative to one target pass, measured on the GPU"],
+    ["λ", "Price of a target call in tokens, set by a Dinkelbach update so the agent maximises tokens per second"],
+  ] as Row[],
+  constants: {
+    cols: ["Pair", "Draft step", "Target verify", "c", "c without CUDA graphs", "Draft match (chat / code / maths)"],
+    rows: [
+      ["Qwen2.5 0.5B → 1.5B", "10.7 ms", "26.5 ms", "0.40", "0.81", "78 / 92 / 92%"],
+      ["SmolLM2 135M → 1.7B", "6.6 ms", "26.7 ms", "0.25", "1.44", "73 / 95 / 83%"],
+    ],
+  },
+  algorithms: [
+    {
+      title: "Value Iteration, model-based.",
+      text: "Bins the state into 80 cells (drafts × q), counts rewards and transitions from the logged outputs, and solves the Bellman equation in about 8 sweeps. It never plays the simulator. 1.5 s to train.",
+    },
+    {
+      title: "Q-learning, model-free.",
+      text: "Same 80 cells, a Q-table learned from 10,000 simulated answers with ε-greedy exploration. Same values as Value Iteration, estimated from noisy samples. 8 s to train.",
+    },
+    {
+      title: "DQN, function approximation.",
+      text: "A 5→64→64→2 network on all five continuous features, with a replay buffer and a target network. Sees the latest token's confidence and entropy, which the table cannot. About 3 minutes to train.",
+    },
+    {
+      title: "REINFORCE, policy gradient.",
+      text: "Learns action probabilities directly. Each draft round is one short episode, so returns have low variance. About 2.5 minutes to train.",
+    },
+  ],
+  live: {
+    cols: ["Method", "Qwen tok/s", "Qwen speedup", "SmolLM2 tok/s", "SmolLM2 speedup"],
+    rows: [
+      ["Target alone", "39.3", "1.00×", "39.2", "1.00×"],
+      ["Best fixed draft length", "54.3", "1.38×", "61.4", "1.57×"],
+      ["Threshold p < 0.4 (HuggingFace)", "55.7", "1.42×", "64.6", "1.65×"],
+      ["Value Iteration", "59.3", "1.51×", "68.4", "1.75×"],
+      ["REINFORCE", "58.8", "1.50×", "66.7", "1.70×"],
+      ["DQN", "57.9", "1.47×", "66.4", "1.70×"],
+      ["Q-learning", "57.7", "1.47×", "65.4", "1.67×"],
+    ],
+  },
+  sim: {
+    cols: ["Method", "Qwen speedup", "Qwen tokens/call", "SmolLM2 speedup", "SmolLM2 tokens/call"],
+    rows: [
+      ["Fixed k = 1", "1.34×", "1.88", "1.48×", "1.84"],
+      ["Fixed k = 3", "1.50×", "3.31", "1.79×", "3.10"],
+      ["Fixed k = 4", "1.50×", "3.89", "1.81×", "3.58"],
+      ["Fixed k = 8", "1.33×", "5.52", "1.63×", "4.78"],
+      ["Threshold p < 0.4", "1.53×", "5.17", "1.91×", "4.43"],
+      ["Value Iteration", "1.66×", "3.88", "2.02×", "3.84"],
+      ["Q-learning", "1.59×", "4.77", "1.94×", "4.42"],
+      ["DQN", "1.63×", "4.78", "2.01×", "4.10"],
+      ["REINFORCE", "1.64×", "4.36", "2.01×", "3.95"],
+    ],
+  },
+  byTask: {
+    cols: ["Task", "Qwen, Value Iteration", "Qwen, threshold", "SmolLM2, Value Iteration", "SmolLM2, threshold"],
+    rows: [
+      ["Chat", "1.31×", "1.25×", "1.48×", "1.39×"],
+      ["Code", "1.61×", "1.55×", "2.03×", "1.96×"],
+      ["Maths", "1.60×", "1.45×", "1.81×", "1.69×"],
+    ],
+  },
+  seeds: {
+    cols: ["Algorithm", "Qwen", "SmolLM2"],
+    rows: [
+      ["Value Iteration", "1.657 (deterministic)", "2.019 (deterministic)"],
+      ["REINFORCE", "1.649 ± 0.005", "2.011 ± 0.008"],
+      ["DQN", "1.623 ± 0.013", "2.015 ± 0.005"],
+      ["Q-learning", "1.586 ± 0.008", "1.928 ± 0.022"],
+    ],
+  },
+  lambda: {
+    cols: ["λ, × tuned value", "0.5", "0.7", "0.9", "1.0", "1.1", "1.2", "1.4"],
+    rows: [
+      ["Sim speedup", "1.47×", "1.60×", "1.66×", "1.66×", "1.64×", "1.61×", "1.34×"],
+      ["Drafts per round", "6.4", "5.1", "3.9", "3.3", "2.9", "2.5", "1.0"],
+    ],
+  },
+  takeaways: [
+    {
+      title: "Planning beats sampling when the model is cheap.",
+      text: "Value Iteration beat Q-learning on the same 80 states (1.66× against 1.59× on Qwen) and trained 5× faster. With an exact count-based model of the logs, there was nothing to gain from learning by trial.",
+    },
+    {
+      title: "The agents rediscovered the known optimal rule.",
+      text: "Value Iteration learned to stop when the chance all drafts survive drops below about 0.7. That is the threshold shape SpecDec++ proves optimal; nobody told it.",
+    },
+    {
+      title: "They read the task from confidence alone.",
+      text: "Agents drafted about twice as long on code and maths as on chat without being told the task. The biggest gain over the threshold rule was on chat, where knowing when to stop matters most.",
+    },
+    {
+      title: "Fewer tokens per call, more tokens per second.",
+      text: "The RL agents got fewer tokens per target call than the threshold rule but were faster, because they stop before a likely rejection and waste fewer draft steps.",
+    },
+    {
+      title: "Kernel launch overhead decides if speculation works.",
+      text: "Without CUDA graphs, the 135M draft model was slower than its 1.7B target on this laptop. The CPU launching kernels was the limit, not model size.",
+    },
+    {
+      title: "A comparison found a bug.",
+      text: "Q-learning first scored 1.28×. Its table, next to Value Iteration's, showed that the impossible CONTINUE at 8 drafts stayed at 0 and taught 'always continue'. Masking it fixed both Q-learning and DQN.",
+    },
+  ],
+  // Repo figures, copied to public/studies/rl/. Each has a Qwen and a SmolLM2 version; sizes are [qwen, smol].
+  figures: {
+    live: { file: "speedup_live", sizes: [[1256, 788], [1284, 730]], caption: "Live speedup on the RTX 3050, wall clock." },
+    perTask: { file: "per_task_draft_len", sizes: [[1185, 651], [1175, 651]], caption: "Tokens drafted per round, by task: about twice as long on code and maths as on chat." },
+    sim: { file: "speedup_sim", sizes: [[1256, 730], [1256, 671]], caption: "Simulator speedup on the 99 test prompts." },
+    simVsLive: { file: "sim_vs_live", sizes: [[1305, 804], [1315, 739]], caption: "Simulator against live: same order, live a little lower." },
+    training: { file: "training_curves", sizes: [[1158, 721], [1158, 721]], caption: "Training curves. REINFORCE rises fastest early." },
+    lambda: { file: "lambda_sweep", sizes: [[1660, 682], [1646, 682]], caption: "Speedup and draft length as λ moves around the tuned value." },
+    heatmap: { file: "policy_heatmap", sizes: [[2423, 743], [2423, 743]], caption: "Share of STOP decisions in each state on the test prompts. Value Iteration's clean edge is the threshold-on-q rule." },
+  },
+  limits: [
+    "Greedy decoding only",
+    "Small models on a 6 GB GPU",
+    "Speedups depend on the hardware's c",
+    "Simulator is 8–14% optimistic",
+    "Live run uses one seed per algorithm",
+    "83–97% token-exact (fp16 near-ties)",
   ],
 };
 

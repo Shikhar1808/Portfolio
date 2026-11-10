@@ -1,7 +1,7 @@
 // Pieces shared by every page: the frame (rail, top bar, contact, footer) and repeated blocks.
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { links, posts, railTicker } from "./data";
+import { links, posts, railTicker, studies } from "./data";
 import { Icon } from "./icons";
 import { NavLinks, type NavItem } from "./nav";
 import { ThemeToggle } from "./theme-toggle";
@@ -11,8 +11,8 @@ export function pageNav(current?: string): NavItem[] {
   const items: NavItem[] = [
     { href: "/#overview", label: "Overview" },
     { href: "/#experience", label: "Experience" },
-    { href: "/study", label: "Study" },
     { href: "/#projects", label: "Projects" },
+    { href: "/studies", label: "Studies" },
     { href: "/#stack", label: "Stack" },
     { href: "/#record", label: "Record" },
     ...(posts.length ? [{ href: "/#writing", label: "Writing" }] : []),
@@ -75,6 +75,53 @@ export function Stats({ items }: { items: { label: string; value: string; note: 
 }
 
 // First column is the row header; the rest are numbers. On phones each cell shows its column name.
+// One card per study, in the same style as the project cards. Used on the home page and /studies.
+export function StudyCards() {
+  return (
+    <div className="project-grid">
+      {studies.map((s) => (
+        <article key={s.slug} className="chamfer">
+          <div className="in project">
+            <div className="screen grain">
+              <span className="chip">{s.kind}</span>
+              <Icon name={s.icon} size={22} />
+              <p className="screen-metric">{s.metric}</p>
+              <p className="screen-note">{s.metricNote}</p>
+            </div>
+            <div className="project-body">
+              <h3>
+                <Link href={`/studies/${s.slug}`}>{s.title}</Link>
+              </h3>
+              <p className="meta">
+                {s.dates} · {s.tags}
+              </p>
+              <p>{s.summary}</p>
+              <Link className="text-link card-more" href={`/studies/${s.slug}`}>
+                Read the study <Icon name="arrow" size={15} />
+              </Link>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+export function KeyValues({ rows }: { rows: [string, string][] }) {
+  return (
+    <div className="chamfer kv-panel">
+      <dl className="in kv">
+        {rows.map(([k, v]) => (
+          <div key={k}>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
 export function DataTable({ cols, rows }: { cols: string[]; rows: string[][] }) {
   return (
     <div className="table-wrap">

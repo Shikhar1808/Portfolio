@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { study } from "../data";
-import { Icon } from "../icons";
-import { DataTable, Head, pageNav, Shell, Stats } from "../ui";
+import { study } from "../../data";
+import { Icon } from "../../icons";
+import { DataTable, Head, KeyValues, pageNav, Shell, Stats } from "../../ui";
 
 export const metadata: Metadata = {
   title: "Internship study | Shikhar Saxena",
@@ -9,31 +9,16 @@ export const metadata: Metadata = {
     "LLM serving on vLLM, SGLang and TensorRT-LLM on a 6 GB RTX 3050, and cosine-similarity vector search on CPU, CUDA and HIP.",
 };
 
-const nav = pageNav("/study");
+const nav = pageNav("/studies");
 
-function KeyValues({ rows }: { rows: [string, string][] }) {
-  return (
-    <div className="chamfer kv-panel">
-      <dl className="in kv">
-        {rows.map(([k, v]) => (
-          <div key={k}>
-            <dt>{k}</dt>
-            <dd>{v}</dd>
-          </div>
-        ))}
-      </dl>
-    </div>
-  );
-}
-
-export default function StudyPage() {
+export default function InternshipStudyPage() {
   const v = study.vector;
   return (
     <Shell nav={nav}>
       <section className="section">
         <Head
           level={1}
-          label="Internship study"
+          label="Internship study · Voxomos Systems"
           title="Same GPU, three engines."
           sub="Software intern at Voxomos Systems, June to July 2026. I served one small model on vLLM, SGLang and TensorRT-LLM on a 6 GB laptop GPU to find what actually limits LLM serving, then wrote the GPU kernels behind vector search."
           rotate={12}

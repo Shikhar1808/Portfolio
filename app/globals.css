@@ -616,6 +616,11 @@ ul {
   color: var(--muted);
 }
 
+/* Study card summary under its meta line */
+.meta + p {
+  margin-top: 12px;
+}
+
 .card-links {
   display: flex;
   justify-content: space-between;
@@ -1284,6 +1289,12 @@ ul {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
+}
+
+/* Study figures sit right under their table */
+.table-wrap + .gallery,
+.gallery + .gallery {
+  margin-top: 20px;
 }
 
 .gallery img {

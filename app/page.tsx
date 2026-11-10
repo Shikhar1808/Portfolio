@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { experience, links, more, pipeline, posts, projects, record, relayPipeline, stack, stats, study } from "./data";
+import { experience, links, more, pipeline, posts, projects, record, relayPipeline, stack, stats } from "./data";
 import { Icon } from "./icons";
 import type { NavItem } from "./nav";
-import { Head, Hexagon, Shell, Stats } from "./ui";
+import { Head, Hexagon, Shell, Stats, StudyCards } from "./ui";
 
 const nav: NavItem[] = [
   { href: "#overview", label: "Overview" },
   { href: "#experience", label: "Experience" },
-  { href: "#study", label: "Study" },
   { href: "#projects", label: "Projects" },
+  { href: "#study", label: "Studies" },
   { href: "#stack", label: "Stack" },
   { href: "#record", label: "Record" },
   ...(posts.length ? [{ href: "#writing", label: "Writing" }] : []),
@@ -124,22 +124,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="study" className="section">
-        <Head
-          label="Internship study"
-          title="Same GPU, three engines."
-          sub="At Voxomos I served TinyLlama-1.1B on vLLM, SGLang and TensorRT-LLM on one 6 GB RTX 3050, then wrote the GPU kernels behind vector search. These are the numbers that moved."
-          rotate={12}
-        />
-        <Stats items={study.llmFindings} />
-        <div className="cta-row">
-          <p>Every engine and workload, the vector search kernels, and what the numbers add up to.</p>
-          <Link className="btn" href="/study">
-            Read the full study <Icon name="arrow" size={16} />
-          </Link>
-        </div>
-      </section>
-
       <section id="projects" className="section tint-lilac">
         <Head
           label="Projects"
@@ -214,6 +198,16 @@ export default function Home() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section id="study" className="section">
+        <Head
+          label="Studies"
+          title="Measured, not assumed."
+          sub="Longer write-ups of things I benchmarked end to end, with every number and what it taught me."
+          rotate={12}
+        />
+        <StudyCards />
       </section>
 
       <section id="stack" className="section">
